@@ -1,31 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>MyFinanceApp</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <meta charset="UTF-8" />
+    <title>Login</title>
+    <link rel="stylesheet" href="css/style.css" />
 </head>
 
 <body>
 
-    <div class="container">
+    <div class="login-container">
+        <form id="loginForm">
 
-        <div class="card">
+            <h1>Finance App</h1>
 
-            <h1>MyFinanceApp</h1>
-            <p class="subtitle">Secure login to your dashboard</p>
+            <input type="text" id="username" placeholder="Username" required />
 
-            <input type="text" placeholder="Email">
-            <input type="password" placeholder="Password">
+            <input type="password" id="password" placeholder="Password" required />
 
-            <button>Login</button>
+            <button type="submit">
+                Login
+            </button>
 
-            <p class="hint">Don’t have an account? Sign up</p>
-
-        </div>
-
+        </form>
     </div>
+
+    <script src="js/login.js"></script>
 
 </body>
 

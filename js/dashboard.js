@@ -1,38 +1,53 @@
-
-console.log("dashboard loaded");
-
-getTransactions()
-    .then(data => console.log(data))
-    .catch(err => console.log("ERROR:", err));
-
 import { getTransactions } from "./api.js";
+import { getToken, logout } from "./auth.js";
 
-window.addEventListener("load", async () => {
-    try {
-        const data = await getTransactions();
+document.addEventListener("DOMContentLoaded", initDashboard);
 
-        renderTransactions(data);
-    } catch (err) {
-        console.log("Error:", err);
+function initDashboard() {
+
+    // 🧠 token kontrolü (temiz ve güvenli)
+    const token = getToken();
+
+    console.log("DASHBOARD TOKEN:", token);
+
+    // ❗ daha sert kontrol (flicker fix)
+    if (!token || token === "undefined" || token === "null" || token.trim() === "") {
+        localStorage.removeItem("token");
+        window.location.replace("login.html"); // replace = geri gelmesin diye
+        return;
     }
-});
 
-function renderTransactions(transactions) {
-    const container = document.querySelector(".transactions");
+    // 🚀 sadece valid token varsa devam
+    loadTransactions(token);
+}
 
-    container.innerHTML = "<h3>Recent Transactions</h3>";
+async function loadTransactions(token) {
+    try {
+        const data = await getTransactions(token);
+        render(data);
+    } catch (err) {
+        console.error(err);
 
-    transactions.forEach(tx => {
+        // ❗ backend patlarsa bile login'e atma (loop engeli)
+        alert("Backend request failed");
+    }
+}
+
+function render(data) {
+    const container = document.getElementById("transactions");
+    container.innerHTML = "";
+
+    data.forEach(tx => {
         const div = document.createElement("div");
-        div.classList.add("tx");
 
         div.innerHTML = `
-            <span>${tx.categoryName}</span>
-            <span class="${tx.type === 'INCOME' ? 'income' : 'expense'}">
-                ${tx.type === 'INCOME' ? '+' : '-'} $${tx.amount}
-            </span>
+            <span>${tx.description}</span>
+            <span>${tx.amount} ₼</span>
         `;
 
         container.appendChild(div);
     });
 }
+
+// logout
+window.logout = logout;

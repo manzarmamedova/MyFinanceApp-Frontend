@@ -1,76 +1,194 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 
 <head>
-    <title>Dashboard | MyFinanceApp</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #0b1220;
+            color: white;
+        }
+
+        /* TOP BAR */
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 30px;
+            background: #111827;
+        }
+
+        .topbar button {
+            background: #ef4444;
+            border: none;
+            padding: 8px 12px;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* GRID */
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* CARD */
+        .card {
+            background: #111827;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .balance {
+            font-size: 28px;
+            font-weight: bold;
+            color: #22c55e;
+        }
+
+        .small {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+
+        /* transactions */
+        .tx {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        /* layout span */
+        .span-2 {
+            grid-column: span 2;
+        }
+    </style>
 </head>
 
 <body>
 
-    <div class="dashboard">
+    <div class="topbar">
+        <h2>MyFinance Dashboard</h2>
+        <button onclick="logout()">Logout</button>
+    </div>
 
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <h2>MyFinance</h2>
+    <div class="container">
 
-            <a href="#">Dashboard</a>
-            <a href="#">Transactions</a>
-            <a href="#">Categories</a>
-            <a href="login.html">Logout</a>
+        <!-- BALANCE -->
+        <div class="card">
+            <div class="small">Total Balance</div>
+            <div class="balance" id="balance">0 ₼</div>
         </div>
 
-        <!-- Main content -->
-        <div class="main">
+        <!-- INCOME / EXPENSE -->
+        <div class="card">
+            <div class="small">Income</div>
+            <div style="color:#22c55e; font-size:20px;" id="income">0 ₼</div>
 
-            <h1>Dashboard</h1>
+            <div class="small" style="margin-top:10px;">Expense</div>
+            <div style="color:#ef4444; font-size:20px;" id="expense">0 ₼</div>
+        </div>
 
-            <!-- Cards -->
-            <div class="cards">
+        <!-- CHART -->
+        <div class="card">
+            <canvas id="chart"></canvas>
+        </div>
 
-                <div class="card">
-                    <p>Total Balance</p>
-                    <h2>$12,450</h2>
-                </div>
-
-                <div class="card">
-                    <p>Income</p>
-                    <h2>$5,200</h2>
-                </div>
-
-                <div class="card">
-                    <p>Expenses</p>
-                    <h2>$3,100</h2>
-                </div>
-
-            </div>
-
-            <!-- Transactions -->
-            <div class="transactions">
-
-                <h3>Recent Transactions</h3>
-
-                <div class="tx">
-                    <span>Salary</span>
-                    <span class="income">+ $2,000</span>
-                </div>
-
-                <div class="tx">
-                    <span>Groceries</span>
-                    <span class="expense">- $120</span>
-                </div>
-
-                <div class="tx">
-                    <span>Transport</span>
-                    <span class="expense">- $50</span>
-                </div>
-
-            </div>
-
+        <!-- TRANSACTIONS -->
+        <div class="card span-2">
+            <h3>Recent Transactions</h3>
+            <div id="transactions"></div>
         </div>
 
     </div>
-    <script type="module" src="js/dashboard.js"></script>
+
+    <script>
+        const BASE_URL = "http://localhost:8080";
+
+        const token = localStorage.getItem("token");
+        if (!token) window.location.href = "login.html";
+
+        async function loadData() {
+            const res = await fetch(`${BASE_URL}/transactions/get`, {
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            });
+
+            const data = await res.json();
+
+            render(data);
+            renderChart(data);
+        }
+
+        function render(data) {
+            const container = document.getElementById("transactions");
+
+            let income = 0;
+            let expense = 0;
+
+            container.innerHTML = "";
+
+            data.forEach(tx => {
+                const amount = tx.amount;
+
+                if (amount > 0) income += amount;
+                else expense += amount;
+
+                const div = document.createElement("div");
+                div.classList.add("tx");
+
+                div.innerHTML = `
+            <span>${tx.description}</span>
+            <span style="color:${amount > 0 ? '#22c55e' : '#ef4444'}">
+                ${amount} ₼
+            </span>
+        `;
+
+                container.appendChild(div);
+            });
+
+            document.getElementById("income").innerText = income + " ₼";
+            document.getElementById("expense").innerText = expense + " ₼";
+            document.getElementById("balance").innerText = (income + expense) + " ₼";
+        }
+
+        function renderChart(data) {
+            const categories = {};
+
+            data.forEach(tx => {
+                const cat = tx.categoryName || "Other";
+                categories[cat] = (categories[cat] || 0) + Math.abs(tx.amount);
+            });
+
+            new Chart(document.getElementById("chart"), {
+                type: "doughnut",
+                data: {
+                    labels: Object.keys(categories),
+                    datasets: [{
+                        data: Object.values(categories)
+                    }]
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+        }
+
+        loadData();
+    </script>
+
 </body>
 
 </html>
