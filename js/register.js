@@ -25,8 +25,8 @@ form.addEventListener("submit", async (e) => {
                 },
 
                 body: JSON.stringify({
-                    username,
-                    password,
+                    userName: username,
+                    password: password
                 }),
             }
         );
@@ -35,7 +35,7 @@ form.addEventListener("submit", async (e) => {
             throw new Error("Register failed");
         }
 
-        alert("Kayıt başarılı");
+        alert("You have successfully registered.");
 
         window.location.href = "login.html";
 
@@ -43,7 +43,7 @@ form.addEventListener("submit", async (e) => {
 
         console.error(error);
 
-        alert("Kayıt başarısız");
+        alert("Registration failed.");
 
     }
 

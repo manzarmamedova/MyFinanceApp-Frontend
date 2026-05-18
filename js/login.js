@@ -24,8 +24,8 @@ form.addEventListener("submit", async (e) => {
                 },
 
                 body: JSON.stringify({
-                    username,
-                    password,
+                    username: username,
+                    password: password
                 }),
             }
         );
@@ -34,9 +34,9 @@ form.addEventListener("submit", async (e) => {
             throw new Error("Login failed");
         }
 
-        const data = await response.json();
+        const token = await response.text();
 
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("token", token);
 
         window.location.href = "dashboard.html";
 
@@ -44,7 +44,7 @@ form.addEventListener("submit", async (e) => {
 
         console.error(error);
 
-        alert("Login başarısız");
+        alert("Login failed.");
 
     }
 
